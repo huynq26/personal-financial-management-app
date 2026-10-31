@@ -24,7 +24,7 @@ Open http://localhost:3000.
 
 ## How the factory uses this repo
 
-1. Product Agent: draft and approve `docs/product.md` and `docs/nfr.md`.
+1. Product Agent: turn ideas into a reviewable PRD, MVP and testable feature specs using [the local skill](.agents/skills/product-agent/SKILL.md), [idea intake](.github/ISSUE_TEMPLATE/product_idea.yml) and [product workflow](docs/product-workflow.md). **You approve the scope**; the agent does not.
 2. Platform Agent: own architecture, platform configuration and build/test infrastructure.
 3. Codex Engineer: implement an approved GitHub issue in an isolated branch and PR.
 4. QC Agent: verify behavior, accessibility and NFRs against a Vercel Preview and record evidence.
