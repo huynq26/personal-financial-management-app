@@ -1,47 +1,48 @@
-# Household Financial Health App — platform architecture
+# Household Financial Health App — Vietnam-resident platform proposal
 
-**Status: proposed Platform Agent design; no provider/database deployed or approved yet.**  
-**Product:** one owner-managed household, VND, secure actual household data entry and health assessment.  
-**Current code:** a static/synthetic Next.js starter only.
+**Status:** Architecture proposed for owner's **Vietnam financial-data residency** requirement; **NOT approved for provisioning, billing or real-data production.**  
+**Product:** one household/family, owner-managed login, VND, private real financial data and explainable status.  
+**Source of truth:** [ADR-0002 — Vietnam residency](adr/0002-vietnam-data-residency.md). **ADR-0001 (Supabase/Singapore) is superseded.**
 
-## Architecture decision
+## Production deployment
 
-- **Recommended:** Next.js App Router on Vercel + **Supabase Auth** (invite-only owner login) + **Supabase PostgreSQL** with tested RLS and conservative role grants. See [ADR-0001](adr/0001-household-auth-and-storage.md).
-- **Alternative:** Neon PostgreSQL + Auth.js + explicit backend authorization, if the owner prefers independent auth and DB providers.
-- Supabase project region proposed Singapore (`ap-southeast-1`), pending owner/provider approval and privacy review. This is not automatic proof of legal compliance.
-- The free tier's backup/retention limitations must be reviewed before real financial data is entrusted to the service. No billing or resources have been activated.
+```text
+User browser --HTTPS--> Vietnam-hosted Next.js (Node, private pages + APIs)
+                              | Better Auth identity & secure sessions
+                              | Server-side household ownership + validation
+                              | Deterministic VND assessment
+                              v
+                      Vietnam-hosted private PostgreSQL
+                        + managed local encrypted backups
+                        + local logging/monitoring with financial amounts redacted
+```
 
-## Data, security, and authentication
+- First provider to evaluate: **Viettel Cloud vServer + Vietnam-region managed PostgreSQL**; second: **VNG Cloud vServer + vDB RDS**. Contract must verify VM, primary DB, replicas, backups, logs and disaster recovery copies are physically in Vietnam.
+- Authentication: **Better Auth** running in the same Vietnam application infrastructure, with identity/session data in the Vietnam PostgreSQL. One owner account; invite-only, no public signup; TOTP MFA proposal. No external auth provider or remote email/OTP platform unless reviewed for data flows.
+- DB: PostgreSQL private network only; application session checks and ownership predicates are mandatory; RLS may add defense in depth but must use server-verified identity, appropriate DB runtime roles and transaction-scoped context—not Supabase `auth.uid()`.
+- Data: [household model](platform/household-data-model.md); nonnegative exact whole-VND numeric/decimal-string representation; null is unknown, not zero. Financial status thresholds still pending owner review.
+- Ops: Linux/Node hardening, TLS, least-privilege secrets, encrypted backups kept in Vietnam, local monitoring, access logs with amounts redacted, tested restore, data deletion/export policy, owner-controlled release.
 
-- [Household data model](platform/household-data-model.md) with private monthly VND snapshots and separate unknown/null values.
-- Next.js server routes/actions verify signed-in identity and validate every request; Supabase Auth SSR with Next.js 16 Proxy. Never use `getSession()` alone as the server authorization proof.
-- RLS and grants protect `households` and `household_snapshots` for each owner. Server passes only user-scoped access; no service-role key in frontend or user request paths.
-- Financial amounts use exact whole-VND decimal strings to avoid unsafe JavaScript number handling; no automatic foreign currency conversion.
-- All real-data tables require migrations and negative tests for cross-account/anonymous access before real storage is permitted.
+## Vercel and software factory
 
-## Environments
+- **Vercel is not production hosting for private financial pages/APIs** under the owner's priority. Vercel currently lists no Vietnam compute region, and overseas SSR/functions may receive private data even if DB lives in Vietnam.
+- Vercel may be kept for **protected, synthetic-only PR previews** or an entirely static public marketing page; it must not hold production DB credentials or access real account records.
+- GitHub (currently public source repo) contains source and **synthetic-only** data. Never commit actual household financial information, credentials, backups or sensitive build artifacts.
+- Production deploy targets VN compute under explicit owner approval. Do not assume existing Vercel integration implies the product is deployed or that a Git push releases production.
+- GitHub Actions CI can build and test with fake data, but avoid exposing secrets to PRs/forks or external workflows.
 
-- **Local** — separate synthetic fixtures only.
-- **Preview** — Vercel Preview + separate synthetic Supabase test project. Preview URLs remain protected; never copy production secrets/data.
-- **Production** — owner-only account, separately secured Supabase production project, protected Vercel production branch and release approval. Do not connect real data before the QC and privacy gate.
-- Vercel Git-connected repository deploys the configured production branch automatically. Confirm branch tracking and protected reviews *before* connecting app code to production. Current repository's default `main` contains only an initial README.
-- No Vercel product deployment has been verified. The earlier workspace authorization attempt required extra user consent.
+## Quality / compliance
 
-## Tests and operational standards
+- [QC release gate matrix](security/private-data-qc-gates.md): verify auth, cross-account isolation, VND precision, no private logs, backups/restore, deletion, Vietnam residency evidence, protection from overseas telemetry and risk-policy decision tables.
+- Vietnam Personal Data Protection Law 91/2025/QH15 effective 2026-01-01 and Decree 356/2025/ND-CP warrant legal review. Data kept in Vietnam does **not** by itself demonstrate compliance.
+- Backups, support access, international email delivery, DNS/CDN, vendor monitoring, application crash reports and error-trace systems must be reviewed for cross-border processing and logging.
 
-- Existing starter GitHub Actions typecheck/unit-test/build workflow is not a secure financial-app release pipeline.
-- [QC Agent private-data gates](security/private-data-qc-gates.md) cover owner-only login, RLS denial, VND precision, authentication, data deletion, preview isolation, backup/restore and incident evidence.
-- Implement real-data intake before risk labels only after owner approves the risk-policy decision table; otherwise show an **Insufficient Data / assessment policy pending** state.
-- Runtime logs must contain safe metadata, not actual financial figures or auth tokens. Set a minimal uptime/error alert and budget guard before production.
-- Data export, retention, backups and deletion timing require an explicit recorded product decision.
+## Next steps and outstanding decisions
 
-## Delivery sequence
+1. Verify Viettel/VNG Vietnam datacenter/managed PostgreSQL/backup regional availability and current costs with provider contracts or console.
+2. Approve provider/hosting budget, auth/MFA, retention/export/delete and recovery point/time targets.
+3. Codex implements Better Auth on VN-hostable Next.js, tenant-isolated DB, private intake and tested VND calculations using **synthetic** records.
+4. Independent QC tests security, region evidence, operational restore/deletion and risk-policy boundary cases, returns PASS/FAIL/BLOCKED.
+5. Only after owner explicitly approves production release should the app collect actual family financial data.
 
-1. Product Agent confirms household-only, VND, owner-submitted private records (**done**).
-2. Platform Agent records the recommended ADR, schema and security test plan (**proposed; done as documentation**).
-3. Owner approves proposed provider, budget and data retention before any provider resources and secrets are configured.
-4. Codex implements, on isolated PRs: auth, schema/RLS, guided data entry/persistence and independent financial calculations.
-5. QC independently tests safety and functionality using synthetic accounts and submits PASS/FAIL/BLOCKED.
-6. DevOps configures Vercel protected Preview, controlled production release and monitoring after approval.
-
-**Do not ask the owner to paste their financial data, Supabase API keys or provider access tokens into GitHub or ChatGPT.**
+**No infrastructure has been created or data processed during this architecture update.**
