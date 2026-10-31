@@ -1,6 +1,6 @@
 # Personal finance MVP — product proposal
 
-**State: draft; requires Product Owner approval.**
+**State: draft; requires Product Owner approval.** Follow the [Product Agent workflow](product-workflow.md). Feature specifications belong in `specs/` and must be linked from implementation issues after approval.
 
 ## Problem
 People need a coherent view of income, expenses, assets and financial progress, without needing financial expertise.
