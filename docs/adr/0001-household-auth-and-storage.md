@@ -1,11 +1,13 @@
 # ADR-0001 — Private household identity and data storage
 
-- Status: **Proposed, pending Product Owner review** (2026-10-31)
+- Status: **SUPERSEDED by [ADR-0002 — Vietnam residency](0002-vietnam-data-residency.md) on 2026-10-31**; original design preserved for historical comparison. DO NOT IMPLEMENT.
 - Prepared by: Software Factory / Platform Agent
 - Applies to: personal-financial-management-app, household financial health MVP
 - Decision owner: huynq26
 - Related: [Product Agent intake](https://github.com/huynq26/software-factory/issues/4), [Platform Issue #2](https://github.com/huynq26/personal-financial-management-app/issues/2)
 - Do not connect live financial data, buy services, run database migrations against production, or deploy until approved and tested.
+
+**Supersession reason:** The owner requires household financial data to remain stored in Vietnam. Supabase Singapore and Vercel private SSR/functions do not fit the proposed residency architecture. The active Platform Agent proposal is Vietnam-hosted Next.js + self-hosted Better Auth + Vietnam-based PostgreSQL, with all private backup/log locations verified; see ADR-0002. No infrastructure was provisioned under either proposal.
 
 ## Context and fixed product decisions
 
