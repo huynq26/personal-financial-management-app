@@ -10,12 +10,12 @@ This is the product implementation repository. Read `docs/product.md`, `docs/arc
 - Use only synthetic sample data; do not commit secrets, real financial records, or API keys.
 - Do not enable real payment/bank connections, paid Vercel services, or production deployment without explicit authorization.
 - A passing starter build is NOT QC approval. Independent functional/NFR test evidence is required.
-## Product Agent — first phase
-- For an **idea** or discovery task, read `.agents/skills/product-agent/SKILL.md` and `docs/product-workflow.md`.
-- Draft or revise `docs/product.md`, `docs/nfr.md`, and `specs/<feature>.md` via a reviewable PR.
-- Create or propose a prioritized, acceptance-testable backlog; record assumptions and open questions.
-- **Never self-approve** product scope. Only the product owner can authorize specs to be implemented.
-- For **implementation** tasks, confirm the issue links an owner-approved spec before coding.
+## Product discovery is owned by the Software Factory
+- Product ideas are captured in `huynq26/software-factory`, not as a local agent installation.
+- The **single** Product Agent definition is [software-factory/.agents/skills/product-agent/SKILL.md](https://github.com/huynq26/software-factory/blob/main/.agents/skills/product-agent/SKILL.md).
+- The factory Product Agent owns writing or proposing changes to this product's `docs/product.md`, `docs/nfr.md`, and `specs/`; these are project outputs, not agent definitions.
+- Require explicit recorded product-owner approval of scoped specs and acceptance criteria before implementing business features.
+- A coding agent in this repository may read these approved artifacts; it does not automatically run Product Agent merely because a shared skill exists.
 
 ## Engineering and downstream handoff
 - Use the Product/Platform/QC/DevOps skills in the factory control repository as complementary role guidance.
