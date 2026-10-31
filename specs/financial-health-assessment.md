@@ -4,7 +4,7 @@
 - Spec status: **Draft — not approved for implementation**
 - Product Agent: Central Software Factory
 - Product owner feedback: The **household/family** is the required assessment unit; financial assessment is the main outcome and cash flow alone is insufficient.
-- Assessment unit decision: **CONFIRMED — household only (2026-10-31)**. Other spec requirements remain Draft.
+- Confirmed scope decisions: **HOUSEHOLD only + VND primary currency (2026-10-31)**. Other requirements, risk thresholds, storage and implementation remain Draft.
 - Priority proposal: P0 / first value-bearing MVP
 - Product owner approval: Pending
 
@@ -12,7 +12,7 @@
 A family wants to understand whether its **combined household financial position** is healthy, requires attention, or is at risk, and learn which factors contribute to that assessment. A positive monthly cash flow alone does not establish financial security: cash reserves, debt obligations, asset liquidity and ability to withstand a setback also matter.
 
 ## Primary user journey (proposed)
-1. An authorized adult opens the **single household assessment** and chooses the household's primary currency (currency choice pending approval). Individual financial-health profiles are not part of this MVP.
+1. An authorized adult opens the **single household assessment**, which displays and accepts monetary values in **VND** for the first MVP. Individual financial-health profiles and multi-currency conversion are not part of this MVP.
 2. User enters/reviews the family's combined net monthly incomes, essential and discretionary spending (including costs of dependents), required debt repayments, liquid savings accessible to the family, assets and liabilities. The system identifies joint versus individually held items when access matters.
 3. User reviews computed metrics, with source inputs and measurement dates.
 4. Application displays an **explainable qualitative status** and separate risk flags, not an unsupported opaque credit/financial score.
@@ -28,7 +28,7 @@ A family wants to understand whether its **combined household financial position
 - **Assets and liabilities:** consolidated household position covering joint plus relevant individually held items; record ownership/valuation and whether they are accessible; avoid duplicate joint-property entries. Debt balances count once.
 - **Optional contextual inputs:** household size/dependent counts, irregular large expenses, upcoming obligations, family goals and income volatility. These do not require individual assessments.
 - **Later, not MVP:** per-person profiles, relationship mapping, collaborative household sharing and detailed member-level financial analytics.
-- Record currency, units and as-of date; support Vietnamese locale as a proposal, pending owner's choice.
+- **Confirmed currency:** VND (ISO 4217) for the initial household snapshot, metric calculations and reports. Capture as-of date and source/valuation date. Display VND with locale-appropriate separators and no fractional đồng. Multi-currency ingestion and automated foreign-exchange conversion are deferred. If an asset is currently valued only in another currency, ask the user to supply an explicit VND valuation/date instead of guessing an exchange rate.
 
 ## Computed indicators
 1. **Household monthly surplus/deficit** = combined net household income − household non-debt monthly expenses − total required payments for debts affecting the family. Exclude intra-household transfers and repayments already included in expenses.
@@ -56,6 +56,11 @@ All determinations apply to the **household**, not to an individual adult or chi
 - Provide 1–3 prioritized, general, low-risk actions grounded in the actual identified causes (e.g., review non-essential spending, examine debt schedule, build accessible reserves).
 - Explain uncertainties and assumptions; avoid guarantees, investment/credit eligibility judgments, or personalized regulated advice.
 - Reflect conflicting dimensions: high property wealth cannot erase a near-term cash shortage.
+
+## Currency-related acceptance criteria (VND scope confirmed; implementation Draft)
+- [ ] Given an input in VND, the app stores/calculates the value with exact integer-đồng precision (or safe validated decimal representation), not imprecise binary floating-point money.
+- [ ] Given an amount represented in another currency, the app rejects automatic aggregation into VND and explains how to provide a documented VND valuation. It does not silently apply an invented exchange rate.
+- [ ] Given a household dashboard, all financial amounts consistently display in VND; ratio-based indicators are shown as ratios/percentages or months, not as VND.
 
 ## Household-specific acceptance criteria (draft)
 - [ ] Given two adults contribute income and share expenses, when the household snapshot is assessed, then combined income and actual household expenses produce **one household result**; no per-person score is displayed.
@@ -94,10 +99,10 @@ All determinations apply to the **household**, not to an individual adult or chi
 
 ## Owner decisions needed before Codex implementation
 1. **Resolved by product owner on 2026-10-31: household/family financial health only.** Do not implement an individual assessment mode in MVP.
-2. Primary currency (VND expected as candidate), multi-currency/asset valuation rules?
+2. **Resolved by product owner on 2026-10-31: VND primary reporting and entry currency for first MVP.** Automated FX conversion and native multi-currency handling are deferred. Precise VND valuation and source-date rules for overseas assets still need Platform/QC review.
 3. Security model and whether first iteration stores genuine sensitive financial information or only synthetic/demo profiles?
 4. Accept status categories Healthy / Caution / At Risk / Insufficient Data?
 5. Select and review threshold policy / risk priority rules, with separate caution for data gaps.
 6. Confirm whether direct income/expense totals suffice for MVP or full manual transaction entry is required.
 
-**Approval gate:** Assessment unit is confirmed, but this specification is otherwise Draft. No engineering implementation, production data ingestion or deployment is authorized.
+**Approval gate:** Household assessment unit and VND primary currency are confirmed, but this specification is otherwise Draft. No engineering implementation, production data ingestion or deployment is authorized.
