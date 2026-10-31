@@ -4,7 +4,7 @@
 - Spec status: **Draft — not approved for implementation**
 - Product Agent: Central Software Factory
 - Product owner feedback: The **household/family** is the required assessment unit; financial assessment is the main outcome and cash flow alone is insufficient.
-- Confirmed scope decisions: **HOUSEHOLD only + VND primary currency (2026-10-31)**. Other requirements, risk thresholds, storage and implementation remain Draft.
+- Confirmed scope decisions: **HOUSEHOLD only + VND primary currency + owner-entered privately saved household data (2026-10-31)**. Authentication/storage design, risk thresholds and release approval remain Draft.
 - Priority proposal: P0 / first value-bearing MVP
 - Product owner approval: Pending
 
@@ -13,11 +13,11 @@ A family wants to understand whether its **combined household financial position
 
 ## Primary user journey (proposed)
 1. An authorized adult opens the **single household assessment**, which displays and accepts monetary values in **VND** for the first MVP. Individual financial-health profiles and multi-currency conversion are not part of this MVP.
-2. User enters/reviews the family's combined net monthly incomes, essential and discretionary spending (including costs of dependents), required debt repayments, liquid savings accessible to the family, assets and liabilities. The system identifies joint versus individually held items when access matters.
+2. After authentication, the user enters/reviews the family's combined net monthly incomes, essential and discretionary spending (including costs of dependents), required debt repayments, liquid savings accessible to the family, assets and liabilities through guided private forms; the app securely saves a versioned household snapshot and can reload it later. The system identifies joint versus individually held items when access matters. See [private household financial intake](private-household-financial-intake.md).
 3. User reviews computed metrics, with source inputs and measurement dates.
 4. Application displays an **explainable qualitative status** and separate risk flags, not an unsupported opaque credit/financial score.
 5. User sees the strongest positive factors, risk factors, next steps, data gaps and the assessment date.
-6. User can update figures and see the assessment change; missing data produces an **Insufficient Data** state.
+6. User can revisit and update their **persisted private figures** and see the assessment change; missing data produces an **Insufficient Data** state. The application must reject access to another household's data.
 
 ## Financial data (manual entry for MVP)
 - **Household identity:** one household assessment with a designated managing adult; optional total adult count and number of dependents for context. Do not collect children's names or identifying details for MVP.
@@ -56,6 +56,11 @@ All determinations apply to the **household**, not to an individual adult or chi
 - Provide 1–3 prioritized, general, low-risk actions grounded in the actual identified causes (e.g., review non-essential spending, examine debt schedule, build accessible reserves).
 - Explain uncertainties and assumptions; avoid guarantees, investment/credit eligibility judgments, or personalized regulated advice.
 - Reflect conflicting dimensions: high property wealth cannot erase a near-term cash shortage.
+
+## Private data collection requirement
+- **Confirmed direction:** the first useful product is not a static sample dashboard. An authenticated adult will enter real household financial information, privately save it, edit it and receive a derived assessment.
+- [Private intake + storage specification](private-household-financial-intake.md) defines onboarding steps, persistence, security, deletion and acceptance cases.
+- No collection of real figures in a public preview, CI environment, issue or unauthenticated form. Deployment with actual data requires independent QC/security approval.
 
 ## Currency-related acceptance criteria (VND scope confirmed; implementation Draft)
 - [ ] Given an input in VND, the app stores/calculates the value with exact integer-đồng precision (or safe validated decimal representation), not imprecise binary floating-point money.
@@ -100,9 +105,9 @@ All determinations apply to the **household**, not to an individual adult or chi
 ## Owner decisions needed before Codex implementation
 1. **Resolved by product owner on 2026-10-31: household/family financial health only.** Do not implement an individual assessment mode in MVP.
 2. **Resolved by product owner on 2026-10-31: VND primary reporting and entry currency for first MVP.** Automated FX conversion and native multi-currency handling are deferred. Precise VND valuation and source-date rules for overseas assets still need Platform/QC review.
-3. Security model and whether first iteration stores genuine sensitive financial information or only synthetic/demo profiles?
+3. **Resolved direction:** signed-in owner enters and privately saves real household financial information; **open implementation decisions** are auth design, data residency, storage provider, retention, export/deletion guarantees, security tests and release gate.
 4. Accept status categories Healthy / Caution / At Risk / Insufficient Data?
 5. Select and review threshold policy / risk priority rules, with separate caution for data gaps.
 6. Confirm whether direct income/expense totals suffice for MVP or full manual transaction entry is required.
 
-**Approval gate:** Household assessment unit and VND primary currency are confirmed, but this specification is otherwise Draft. No engineering implementation, production data ingestion or deployment is authorized.
+**Approval gate:** Household scope, VND primary currency and authenticated, real user-supplied data collection as a product requirement are confirmed. Financial policy, security implementation and production release are still Draft. No engineering implementation, production data ingestion or deployment is authorized.
