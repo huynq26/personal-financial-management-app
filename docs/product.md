@@ -1,13 +1,13 @@
 # Financial Health App — MVP product brief
 
-**Status: Draft (scope refinement requested by owner); NOT approved for implementation.**  
+**Status: Draft specifications; HOUSEHOLD ASSESSMENT UNIT CONFIRMED by product owner (2026-10-31); remaining MVP decisions and implementation NOT approved.**  
 **Product Agent:** Central [Software Factory Product Agent](https://github.com/huynq26/software-factory/blob/main/.agents/skills/product-agent/SKILL.md).  
 **Factory intake and approval:** [Issue #4](https://github.com/huynq26/software-factory/issues/4).  
 **Specifications:** [Financial health assessment](../specs/financial-health-assessment.md) (primary) and [cash-flow tracking](../specs/manual-cashflow-tracking.md) (supporting).
 
 ## Problem / main outcome
 
-Users don't simply want to record income and spending. They want an **understandable assessment of their current financial condition**: What is healthy? Where are the risks? What should they improve first? Financial well-being depends on liquidity, ability to meet obligations, buffer for shocks and progress toward goals, not cash flow alone.
+A family wants an **understandable assessment of its combined household financial condition**: Can we cover our living costs and family obligations? Which risks affect our household? What should we improve first? Financial health depends on household liquidity, shared and personal obligations, resilience to shocks and progress toward goals—not merely cash flow.
 
 ### What the app should answer
 1. **What is my overall financial status?** Healthy, Caution, At Risk, or Insufficient Data.
@@ -15,14 +15,18 @@ Users don't simply want to record income and spending. They want an **understand
 3. **What could I improve?** Prioritized, practical general next steps, with uncertainty and assumptions clearly explained.
 4. **How is my situation changing?** Reassess after data is updated; trends are a later increment.
 
-## Target users and evidence
-Initially individuals or households who want a clearer financial overview; which model to support first is pending owner review. This is a product hypothesis, not evidence of product-market fit.
+## Target users and confirmed assessment unit
+**Decision: HOUSEHOLD/FAMILY ONLY for MVP (confirmed by product owner on 2026-10-31).** The primary user is an adult who manages or jointly manages the family budget. Each assessment describes **one household as a financial unit**, not an individual's financial score. Household size and number of dependents may be entered as optional contextual counts; names, birthdates and children's personal records are not required.
+
+Aggregate combined income, ordinary household spending, repayments for obligations affecting the family, accessible household reserves, assets and liabilities. Jointly held and individually held items relevant to the household may both be included; do not count internal transfers or shared assets twice. Distinguish individually held assets that are *not available* for paying household costs. Confirm access/ownership rules before real-data entry.
+
+This audience definition is a product hypothesis, not evidence of product-market fit.
 
 ## MVP scope (revised proposal)
 
 **P0 — Financial snapshot & financial health assessment**
-- Manually enter monthly income, essential/discretionary expenses, required debt repayments, accessible savings, assets and liabilities; specify currency and as-of date.
-- Calculate monthly surplus, liquid emergency-fund coverage, debt burden and net worth with auditable definitions and no double-counted loan payments.
+- Manually enter **combined household** monthly income, essential/discretionary family expenses, required payments on debts affecting the household, accessible family savings, assets and liabilities; specify currency and as-of date. Mark ownership/availability where it affects emergency liquidity.
+- Calculate **household** monthly surplus, liquid emergency-fund coverage, debt burden and household net worth with auditable definitions. Avoid double-counting shared items, internal household transfers and loan repayments.
 - Display an explainable qualitative assessment: Healthy / Caution / At Risk / Insufficient Data, with categorized contributing signals and measurement gaps.
 - Provide specific, general action suggestions (e.g. review spending, improve emergency liquidity) rather than unvalidated predictions or individualized investment advice.
 - Keep missing/uncertain inputs visible. Risk classification rules/thresholds need an explicit versioned, owner-approved policy.
@@ -38,13 +42,14 @@ Initially individuals or households who want a clearer financial overview; which
 Bank connections, credit scoring, trading, regulated investment recommendations, automated financial transactions, credit eligibility and production use of real sensitive data before privacy controls are approved.
 
 ## Functional acceptance (draft)
+- [ ] Given a family financial snapshot, all reported income, spending, debts and available reserves are assessed **at household level**, with amounts traced to their sources and no duplicated shared assets or inter-member transfers.
 - [ ] With valid complete inputs, metrics follow documented formulas, currencies and precision.
 - [ ] Positive monthly cash flow cannot by itself imply Healthy when liquid reserves or debt obligations are risky.
-- [ ] Illiquid property value counts toward net worth but **not** accessible emergency reserves.
+- [ ] Family home/property and restricted assets may count toward net worth (with liability offsets), but **not** accessible emergency reserves.
 - [ ] Missing or inconsistent key information triggers Insufficient Data or a visibly qualified assessment.
 - [ ] Every status shows **why**, including metrics, applied policy and general action suggestions.
 - [ ] Threshold boundary conditions, negative states, zero denominators and conflicting indicators have deterministic QC tests.
-- [ ] For real stored data, only the authenticated data owner can access their information.
+- [ ] For real stored data, only authorized household account holders can view or change household records. A separate family's records are never accessible; household sharing and invitation permissions must be explicitly designed before launch.
 
 ## NFRs
 See [NFR specification](nfr.md). The product deals with sensitive financial information, so authentication, isolation, privacy and auditability are prerequisites to real-data persistence. A demo with synthetic data can precede real-data integration.
@@ -53,7 +58,7 @@ See [NFR specification](nfr.md). The product deals with sensitive financial info
 User can enter a snapshot, understand an assessment and accurately identify key financial risks. Candidate measured signals: task completion without assistance, user comprehension, correctness across audited test scenarios, and feedback about actionable explanations. Research and quantitative targets pending.
 
 ## Open questions for owner
-- Individual versus household?
+- **Resolved: household/family financial health only for MVP (2026-10-31).**
 - VND only or multiple currencies?
 - Demo-only versus securely persisted real personal data?
 - Are the proposed status labels acceptable?
@@ -63,4 +68,4 @@ User can enter a snapshot, understand an assessment and accurately identify key 
 CFPB describes financial well-being as control of finances, ability to absorb a shock, progress toward goals and freedom of choice: https://www.consumerfinance.gov/consumer-tools/financial-well-being/about/. Do not equate a newly invented status classification with the validated CFPB self-report scale or represent it as a certified financial diagnosis.
 
 ## Approval
-Pending. The existing Next.js pilot UI is a **fictional technical scaffold**, not an implemented financial health assessment or production-ready financial product.
+Household assessment unit confirmed; other scope choices and implementation approval pending. The existing Next.js pilot UI is a **fictional technical scaffold**, not an implemented financial health assessment or production-ready financial product.
