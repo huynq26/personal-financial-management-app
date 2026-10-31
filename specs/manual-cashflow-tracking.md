@@ -19,7 +19,7 @@ An authorized adult enters a household income or expense with amount, date, cate
 - Manually add, review, edit and delete income/expense records.
 - View **combined household** income, expense and net cash flow totals for a selected calendar month; exclude transfers between family members and avoid double-counting shared expenses or loan repayments.
 - Basic categories and clear empty/error states.
-- Currency and persistence strategy to be approved before implementation.
+- First MVP currency is confirmed as VND, although this detailed transaction ledger is deferred. If implemented later, use consistent VND values; multi-currency and persistence details require new design approval.
 - All computation is reproducible and testable.
 
 ## Out of scope
@@ -31,7 +31,7 @@ An authorized adult enters a household income or expense with amount, date, cate
 - Transaction type: income or expense.
 - Amount: positive number with currency-specific precision; never use binary floating point for stored money.
 - Transaction date, category and optional description.
-- Decide timezone, currency policy and whether users can enter past/future dates.
+- Currency decision: VND is primary for the first MVP (owner confirmed 2026-10-31); timezone/date and additional currency support remain later choices.
 - Household data must be restricted to authorized adult account(s) for that household; prevent cross-household access. Authentication, invitations and storage are not yet implemented.
 
 ## Acceptance criteria for the later ledger feature (candidate; NOT MVP requirements)
@@ -64,4 +64,4 @@ QC produces an independent PASS/FAIL/BLOCKED report with preview URL and commit 
 ## Handoff
 Platform Agent: recommend and justify auth, database, money representation, testing/CI architecture and privacy controls.
 Codex: no implementation issue until owner approves this specification.
-Product Owner: household assessment unit is confirmed for MVP; other scope choices, currency, authorization and hosting decisions remain open.
+Product Owner: household assessment unit and VND primary currency are confirmed for MVP; other scope choices, authorization and hosting decisions remain open.
