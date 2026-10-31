@@ -16,8 +16,8 @@ User idea in ChatGPT
 
 ## Required steps
 
-1. Create an Idea issue using GitHub's `Product idea` issue form. ChatGPT may help write it.
-2. Run the Product Agent skill in Codex, with the issue and repo as context, to **draft** specs in a PR.
+1. Create a product-intake issue in the **software-factory** control repository (not in this product repository). ChatGPT can help structure it.
+2. Run the **factory's centralized Product Agent** against the intake issue and this product's context; it drafts specs as a PR in this product repository. Its skill is stored only at `huynq26/software-factory/.agents/skills/product-agent/SKILL.md`. An agent orchestrator must explicitly load that skill; the product repository does not automatically inherit remote Codex skills.
 3. Review the proposed audience, problem, user journeys, MVP, exclusions, measurable success criteria, key risks and NFRs.
 4. Approve or reject the scope in a recorded issue/PR comment. Only the owner can approve; the Product Agent cannot self-approve.
 5. After approval, accept the spec PR and create implementation issues linked to exact spec paths and acceptance criteria.
