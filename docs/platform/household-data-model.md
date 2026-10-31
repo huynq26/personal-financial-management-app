@@ -1,58 +1,54 @@
-# Household private-data model — Platform design proposal
+# Household private-data model — Vietnam-resident production proposal
 
-**Status: proposal; no migration has been executed, no database provisioned.**  
-Contract sources: `docs/product.md`, `specs/private-household-financial-intake.md`, `specs/financial-health-assessment.md`.
+**Status:** Platform design only; no database/migration provisioned or executed.  
+**Architecture:** [ADR-0002](../adr/0002-vietnam-data-residency.md) (Vietnam-hosted Better Auth + PostgreSQL). The prior Supabase-specific `auth.users`/`auth.uid()` contract is superseded.
 
-## Modeling rules
+## Tables and identity
 
-The first MVP is **one authenticated adult account / one household**. This is a private monthly financial snapshot, **not** transaction-level bookkeeping.
+Better Auth uses its own user/session tables in PostgreSQL. Confirm its exact schema/ID type after pinning a reviewed version. **Do not assume UUID identity**: the default Better Auth user ID can be a string. Build referential keys with matching types and separately owned account data.
 
-| Entity | Fields / constraints | Notes |
+| Table | Fields | Invariants |
 | --- | --- | --- |
-| `households` | `id UUID PK`, `owner_id UUID NOT NULL UNIQUE` referencing `auth.users`, `created_at`, `updated_at` | One household per authenticated owner; no children/member identities |
-| `household_snapshots` | `id UUID PK`, `household_id UUID`, `owner_id UUID`, `report_month DATE`, `as_of DATE`, `version INT`, timestamps | Unique `(household_id, report_month)`; composite `(household_id, owner_id)` FK to households prevents spoofed ownership |
-| Monetary fields on snapshot | `monthly_net_income_vnd`, `essential_outgoings_vnd`, `discretionary_outgoings_vnd`, `required_debt_payments_vnd`, `outstanding_debt_vnd`, `liquid_reserves_available_vnd`, `total_assets_vnd`, `total_liabilities_vnd` | Nullable `NUMERIC(20,0)` + nonnegative CHECK; nullable ≠ zero. Assets includes liquid savings **once**; liabilities includes outstanding debt **once** |
-| Risk context | `overdue_status` (`yes`/`no`/`unknown`), `valuation_as_of`, `income_variability`, optional adult/dependent **counts** | Unknown should not default to no/zero; never collect children's names |
-| Change metadata | `updated_at`, `revision`; optional metadata-only audit trail | Do not log private financial amounts or record previous versions without approved retention policy |
+| Better Auth user/session/account/verification tables | Library-generated IDs and security/session fields | Restricted auth role; single invited adult; no public signup |
+| `households` | `id UUID PK`, `owner_user_id TEXT UNIQUE NOT NULL`, timestamps | `owner_user_id` FK to Better Auth user primary key, exact field/type confirmed in migration |
+| `household_snapshots` | `id UUID PK`, `household_id UUID`, `owner_user_id TEXT`, `report_month DATE`, `as_of DATE`, revision, timestamps | Unique (household_id, report_month); composite FK ties owner and household; no cross-owner change |
 
-**Normalization decision:** no automated per-person account aggregation or automatic duplicate detection in MVP. User enters already-consolidated household totals with help text: exclude transfers between family members, do not repeat a joint asset, don't double-count loan payments under general expenses. An optional future `holdings` table can represent item-level provenance if needs warrant it.
+Snapshot monetary columns (proposal, each `NUMERIC(20,0)` with nonnegative and max-bound CHECK): `monthly_net_income_vnd`, `essential_outgoings_vnd`, `discretionary_outgoings_vnd`, `required_debt_payments_vnd`, `outstanding_debt_vnd`, `liquid_reserves_available_vnd`, `total_assets_vnd`, `total_liabilities_vnd`. Each is nullable where unknown must not be misrepresented as zero.
 
-## Money and dates
+Other fields: overdue status (yes/no/unknown), valuation date, snapshot month, income volatility indicator, optional non-identifying adult/dependent counts. No names of children, bank passwords, account numbers or national identification numbers.
 
-- Inputs and outputs are VND; support whole đồng only, without implicit currency conversion.
-- Validate decimal-digit amounts (strip sanctioned grouping symbols only in UI) and enforce a documented maximum; encode database numeric amounts as **decimal strings** across API boundaries; never serialize a DB `NUMERIC(20,0)` as an unsafe JavaScript number.
-- For deterministic calculations use tested BigInt-safe operations or a decimal package. Percent/ratio results can be separately rounded for display, preserving source amount precision.
-- `report_month` is normalized to the first day of the reporting month; `as_of` is the actual assessment snapshot date. Enforce a consistent timezone policy before release.
-- `liquid_reserves_available_vnd` means spendable by the household; an illiquid property may appear in assets but must not inflate emergency coverage.
-- Monthly surplus = income − essential spending − discretionary spending − required debt repayments, assuming the spending figures exclude repayments.
-- Emergency months = available liquid reserves ÷ (monthly essential outgoings + unavoidable debt repayments), if denominator > 0.
-- Debt burden = monthly required repayments ÷ net income, when net income > 0.
-- Household net worth = total assets − total liabilities; these consolidated assets/liabilities do not add the debt or reserves columns a second time.
-- Do not implement Healthy/Caution/At Risk thresholds until a versioned risk policy has been approved. Insufficient Data is a valid result when information is missing/contradictory.
+## Exact money rules
 
-## RLS and privilege implementation requirements
+- Whole VND only. Validate source strings; Postgres decimal numeric stores exact values. On TS/API boundaries serialize **strings** to avoid IEEE-754 precision loss.
+- Household net income is combined monthly net pay; do not count transfers between members.
+- Essential/discretionary outgoings do **not** include the monthly debt repayments entered separately. Cash-flow surplus = income − expenses − required repayments.
+- Emergency coverage = accessible reserves / (essential outgoings + unavoidable debt payments), when denominator > 0.
+- Household net worth = assets − liabilities; cash already part of assets and debts already part of liabilities **must not be added twice**.
+- Distinguish accessible savings from restricted funds and illiquid property; unknown input ≠ zero.
+- Classification thresholds require versioned owner-approved policy; missing values should yield Insufficient Data or explicitly limited results.
 
-This is a **policy contract, not executable migration SQL**. Platform/Codex must create actual reviewed migrations and pgTAP tests.
+## Authorization / RLS design
 
-- `households`: `owner_id = auth.uid()` for **SELECT, INSERT, UPDATE, DELETE**, with restrictive grants to `authenticated` and none to `anon`; insert/update WITH CHECK also enforces current owner.
-- `household_snapshots`: same owner predicate for all CRUD operations plus a composite foreign key `(household_id, owner_id)` to `households(id, owner_id)`, with a UNIQUE index on household pair. The server derives owner ID from verified session, not request body.
-- Enable **RLS** and restrict table grants, not policies alone. Avoid `service_role`/DB owner in user request paths; never expose secret keys to clients. Restrict privileged table changes to migrations.
-- Ownership field mutations must be prohibited at the application API and DB permission/trigger level so no user can reassign a record; ensure RLS WITH CHECK and FK enforce the same.
-- Every user-inputted financial field must be validated server-side with explicit non-negative whole-VND, upper-bound and data consistency checks. Do not assume frontend validation suffices.
-- On household delete, cascade active snapshot deletion. Separately document auth-account deletion and backup retention. Don't claim immediate erasure from backups.
-- Ensure `owner_id` is never set by the client. Query identity is verified on each request; never cache household responses across users.
+- **Mandatory:** a verified Better Auth session on every server-side read/write; owner identity derived from session, never from client-supplied owner ID. Every query must constrain `owner_user_id` to that identity.
+- DB network only accessible from VN app server and restricted admin network. Runtime DB role has minimal grants; no owner/superuser privilege and no `BYPASSRLS`. Auth schema permissions must be scoped separately.
+- **Optional but recommended defense in depth:** PostgreSQL RLS policies for household/snapshot tables based on transaction-local `current_setting('app.current_user_id', true)`. The server must set this value **from the verified Better Auth session** inside the same SQL transaction (`SET LOCAL`/`set_config(..., true)`) for every data access. Policies must also enforce WITH CHECK and immutable owner relationship.
+- **Never** use `auth.uid()` (Supabase-specific) or an arbitrary client-supplied JWT/owner ID. Tests must verify connection pooling doesn't leak tenant session context and normal query paths cannot bypass server auth.
+- RLS transaction context supplied by the server is *not* a substitute for secure SQL parameterization or query ownership predicates. Test SQL injection and privilege escalation.
+- DB-level owner/household FKs, not just business code, reject cross-owner attachment and changes to owner IDs.
+- Active-record deletion and provider backup retention must be documented and tested. Do not claim instant erased backups.
 
-## Idempotence and revisions
+## Operations and environment residency
 
-- A snapshot is identified by authenticated owner/household plus normalized month. Upsert should not produce a duplicate if the user retries a failed network request.
-- Use optimistic locking `revision` or an equivalent conditional update to prevent silent overwrites from two tabs; return a clear conflict, never silently discard one edit.
-- If keeping historical version copies, define their retention and protection separately and apply equivalent RLS.
+- Primary managed PostgreSQL, read replicas, backups and restore copies all physically in **Vietnam**. Exact datacenter/region verified with provider and the approved contract.
+- Store identity/session data and any retained private logs only in the Vietnam-hosted systems. Prevent unreviewed third-party exports and cross-border telemetry.
+- Production must never share DB/session secrets with Vercel Preview or GitHub CI (both synthetic only).
 
-## Implement/test before any real data
+## Migration / testing requirements
 
-- pgTAP/SQL or integration tests for two synthetic identities, each with a household; one cannot select/insert/update/delete another's snapshots even with an explicit UUID.
-- Unknown versus true zero, negative amount rejection, max amount/overflow, grouping/precision, duplicate month, missing date, timestamp consistency.
-- Family consolidation and no double-counting for shared assets, intra-household transfers and loan payments.
-- Restore from backup, data export and delete/retention; auth-disabled/deleted account behavior.
+1. Generate/review Better Auth schema, identity types and migrations, retaining a rollback/backup plan.
+2. Create household/snapshot tables, composite keys, permissions, validated numeric ranges and optional RLS policies.
+3. With two synthetic accounts, verify each CRUD operation, guessed IDs, forged ownership, anonymous requests, expired sessions, SQL transaction-scoped tenant context and denial of ownership reassignment.
+4. VND precision, negative/overlarge numbers, NULL vs zero, safe retries and edit conflicts; household shared-asset consolidation and debt duplicate handling.
+5. Prove backup/restore, active deletion, retention disclosure, tenant isolation and Vietnam residency **before first real user financial data**.
 
-Further refinements and selected provider must be approved in [ADR-0001](../adr/0001-household-auth-and-storage.md).
+**No production migrations or tests have yet run.**
