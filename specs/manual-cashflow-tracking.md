@@ -1,10 +1,13 @@
-# Feature: Record and review monthly cash flow
+# Supporting feature: Record and review monthly cash flow
 
 - Product: Personal Financial Management App
 - Spec status: **Draft — not approved for implementation**
 - Idea source: Initial personal finance MVP proposal in `docs/product.md`
-- Priority proposal: P1
+- Priority proposal: P2 for detailed transaction editing; manual **monthly summary inputs** are part of financial health P0
 - Product Owner approval: Pending
+
+## Scope relationship
+This is a supporting / later increment, **not the product's primary purpose**. The first valuable MVP is [Financial Health Assessment](financial-health-assessment.md). A user can enter monthly income, expenses and debt payments in a **summary form**, without a transaction ledger. Detailed individual record entry/editing is optional and awaits separate approval.
 
 ## User problem and expected outcome
 An individual wants to understand monthly income, expenses and available surplus without manually reconciling separate notes or spreadsheets.
@@ -12,7 +15,7 @@ An individual wants to understand monthly income, expenses and available surplus
 ## Personas and main journey
 An individual enters an income or expense with amount, date, category and optional description, can correct an entry, and views totals for a selected month. This is a **proposed** MVP flow; no real customer research has been performed.
 
-## In scope (proposal)
+## In scope for a later, separately approved ledger iteration
 - Manually add, review, edit and delete income/expense records.
 - View income, expense and net cash flow totals for a selected calendar month.
 - Basic categories and clear empty/error states.
@@ -31,7 +34,7 @@ An individual enters an income or expense with amount, date, category and option
 - Decide timezone, currency policy and whether users can enter past/future dates.
 - Personal data must be private to the authenticated owner. Authentication and storage are not yet implemented.
 
-## Acceptance criteria (candidate)
+## Acceptance criteria for the later ledger feature (candidate; NOT MVP requirements)
 - [ ] Given a signed-in user with an empty month, when they view the dashboard, then all totals show zero and the empty state explains how to add a transaction.
 - [ ] Given a valid expense, when the user saves it, then it appears once in the selected month and expense/net totals update correctly.
 - [ ] Given a valid income record, when saved, then income and net cash flow update correctly.
