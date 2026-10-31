@@ -10,14 +10,14 @@
 This is a supporting / later increment, **not the product's primary purpose**. The first valuable MVP is [Financial Health Assessment](financial-health-assessment.md). A user can enter monthly income, expenses and debt payments in a **summary form**, without a transaction ledger. Detailed individual record entry/editing is optional and awaits separate approval.
 
 ## User problem and expected outcome
-An individual wants to understand monthly income, expenses and available surplus without manually reconciling separate notes or spreadsheets.
+A household budget manager wants to understand the family's combined monthly income, expenses and available surplus without reconciling each contributor's records manually.
 
 ## Personas and main journey
-An individual enters an income or expense with amount, date, category and optional description, can correct an entry, and views totals for a selected month. This is a **proposed** MVP flow; no real customer research has been performed.
+An authorized adult enters a household income or expense with amount, date, category and optional description, can correct an entry, and views combined family totals for a selected month. This is a **proposed** MVP flow; no real customer research has been performed.
 
 ## In scope for a later, separately approved ledger iteration
 - Manually add, review, edit and delete income/expense records.
-- View income, expense and net cash flow totals for a selected calendar month.
+- View **combined household** income, expense and net cash flow totals for a selected calendar month; exclude transfers between family members and avoid double-counting shared expenses or loan repayments.
 - Basic categories and clear empty/error states.
 - Currency and persistence strategy to be approved before implementation.
 - All computation is reproducible and testable.
@@ -32,7 +32,7 @@ An individual enters an income or expense with amount, date, category and option
 - Amount: positive number with currency-specific precision; never use binary floating point for stored money.
 - Transaction date, category and optional description.
 - Decide timezone, currency policy and whether users can enter past/future dates.
-- Personal data must be private to the authenticated owner. Authentication and storage are not yet implemented.
+- Household data must be restricted to authorized adult account(s) for that household; prevent cross-household access. Authentication, invitations and storage are not yet implemented.
 
 ## Acceptance criteria for the later ledger feature (candidate; NOT MVP requirements)
 - [ ] Given a signed-in user with an empty month, when they view the dashboard, then all totals show zero and the empty state explains how to add a transaction.
@@ -64,4 +64,4 @@ QC produces an independent PASS/FAIL/BLOCKED report with preview URL and commit 
 ## Handoff
 Platform Agent: recommend and justify auth, database, money representation, testing/CI architecture and privacy controls.
 Codex: no implementation issue until owner approves this specification.
-Product Owner: confirm user goals, MVP boundary, currency, and security/hosting decisions.
+Product Owner: household assessment unit is confirmed for MVP; other scope choices, currency, authorization and hosting decisions remain open.
