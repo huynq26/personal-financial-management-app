@@ -46,6 +46,15 @@ The user opens their private application, signs in, enters their household's rea
 
 Use exact whole-VND amounts with input formatting that distinguishes 1000000 from 1.000.000; do not accept silently rounded fractional values. Explicit **Unknown / Not provided** is distinct from **0**. Field grouping must be understandable to a non-accountant.
 
+## Vietnam-resident data requirement (confirmed 2026-10-31)
+
+The owner specifically requires **household financial data to remain stored in Vietnam**. Any production database, replica, backup, retention archive, private logs or export with sensitive figures must be in a verified Vietnam datacenter. The proposed production architecture also hosts the private app APIs and self-hosted Better Auth in Vietnam; Vercel may be used only for synthetic previews, not private production SSR/functions. See [ADR-0002](../docs/adr/0002-vietnam-data-residency.md).
+
+- [ ] Given a selected provider, the Platform Agent documents physical location of DB, replicas, backup/restore and financial logs and collects evidence.
+- [ ] Given production private-data requests, the application and auth runtime run in Vietnam; no unapproved third-party foreign processors or email/SMS logging receive the submitted values.
+- [ ] Given protected Vercel Preview or GitHub CI, no real financial amounts, real auth cookies or production secrets are ever present.
+- [ ] Given recovery/deletion, backups and restores remain in Vietnamese storage locations and meet the disclosed retention schedule.
+
 ## Persistence and privacy contract
 
 - Account access: an authenticated adult user initially owns and controls a single household record. No public records or cross-household access. No household sharing in MVP.
