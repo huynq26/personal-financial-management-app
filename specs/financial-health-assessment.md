@@ -1,42 +1,46 @@
-# Feature: Explain the user's financial health and risks
+# Feature: Explain the family's household financial health and risks
 
 - Product: Personal Financial Management App
 - Spec status: **Draft — not approved for implementation**
 - Product Agent: Central Software Factory
-- Product owner feedback: Financial assessment is the main outcome; cash flow alone is insufficient.
+- Product owner feedback: The **household/family** is the required assessment unit; financial assessment is the main outcome and cash flow alone is insufficient.
+- Assessment unit decision: **CONFIRMED — household only (2026-10-31)**. Other spec requirements remain Draft.
 - Priority proposal: P0 / first value-bearing MVP
 - Product owner approval: Pending
 
 ## User problem and outcome
-A person wants to understand whether their **overall personal or household financial position** is healthy, requires attention, or is at risk, and learn which factors contribute to that assessment. A positive monthly cash flow alone does not establish financial security: cash reserves, debt obligations, asset liquidity and ability to withstand a setback also matter.
+A family wants to understand whether its **combined household financial position** is healthy, requires attention, or is at risk, and learn which factors contribute to that assessment. A positive monthly cash flow alone does not establish financial security: cash reserves, debt obligations, asset liquidity and ability to withstand a setback also matter.
 
 ## Primary user journey (proposed)
-1. User chooses whether the assessment covers an individual or household and chooses their main currency.
-2. User enters or reviews a financial snapshot: monthly take-home income, essential and discretionary expenses, contractual debt repayments, liquid savings, assets and outstanding liabilities.
+1. An authorized adult opens the **single household assessment** and chooses the household's primary currency (currency choice pending approval). Individual financial-health profiles are not part of this MVP.
+2. User enters/reviews the family's combined net monthly incomes, essential and discretionary spending (including costs of dependents), required debt repayments, liquid savings accessible to the family, assets and liabilities. The system identifies joint versus individually held items when access matters.
 3. User reviews computed metrics, with source inputs and measurement dates.
 4. Application displays an **explainable qualitative status** and separate risk flags, not an unsupported opaque credit/financial score.
 5. User sees the strongest positive factors, risk factors, next steps, data gaps and the assessment date.
 6. User can update figures and see the assessment change; missing data produces an **Insufficient Data** state.
 
 ## Financial data (manual entry for MVP)
-- Income: net household or individual monthly income; income stability / variability as optional self-report.
-- Spending: essential and discretionary monthly expenses; normalize treatment of required debt payments to avoid double counting.
-- Debt: outstanding loan balances, required monthly payments, missed/overdue payments as optional self-report.
-- Liquid reserves: cash and readily accessible savings, **separate from illiquid assets** such as property.
-- Assets: liquid/illiquid assets with valuation dates; outstanding liabilities and amounts owed.
-- Optional later: near-term obligations, known financial goals, number of dependents, protection/insurance gaps, subjective financial confidence.
+- **Household identity:** one household assessment with a designated managing adult; optional total adult count and number of dependents for context. Do not collect children's names or identifying details for MVP.
+- **Income:** combined net monthly income of household contributors; indicate stable versus variable income if known. Do not count transfers between members as new income.
+- **Spending:** family essential and discretionary monthly expenses including housing, caregiving, children's education, utilities and shared living costs. Count each cost once. Keep required debt payments separate to avoid double counting.
+- **Debt:** joint and individually held loans whose repayments affect household cash flow; include outstanding balances, mandatory monthly payments and known overdue amounts, without counting the same shared obligation twice.
+- **Liquid reserves:** cash/deposits readily available to support household obligations, **excluding inaccessible/restricted money and illiquid assets** such as property; track accessible status for individually held accounts.
+- **Assets and liabilities:** consolidated household position covering joint plus relevant individually held items; record ownership/valuation and whether they are accessible; avoid duplicate joint-property entries. Debt balances count once.
+- **Optional contextual inputs:** household size/dependent counts, irregular large expenses, upcoming obligations, family goals and income volatility. These do not require individual assessments.
+- **Later, not MVP:** per-person profiles, relationship mapping, collaborative household sharing and detailed member-level financial analytics.
 - Record currency, units and as-of date; support Vietnamese locale as a proposal, pending owner's choice.
 
 ## Computed indicators
-1. **Monthly surplus/deficit** = monthly net income − non-debt monthly expenses − required monthly debt payments. Document whether expense totals already include repayments.
-2. **Savings capacity** = surplus / income where income is positive; negative surplus is explicitly displayed.
-3. **Emergency coverage (months)** = liquid reserves / monthly essential outgoings, including required debt payments, if essential outgoings are positive.
-4. **Debt payment burden** = required monthly debt payments / monthly income, if income is positive.
-5. **Net worth** = total assets − liabilities; show valuation date and distinguish illiquid from spendable amounts.
+1. **Household monthly surplus/deficit** = combined net household income − household non-debt monthly expenses − total required payments for debts affecting the family. Exclude intra-household transfers and repayments already included in expenses.
+2. **Household savings capacity** = family surplus / combined net household income where income is positive; negative surplus is explicitly displayed.
+3. **Household emergency coverage (months)** = reserves **accessible to meet family obligations** / household essential outgoings (including necessary repayments), if denominator is positive. Do not treat a restricted account or family home as liquid reserves.
+4. **Household debt payment burden** = total required monthly payments for debts affecting the family / combined net household income, if income is positive.
+5. **Household net worth** = consolidated family assets − consolidated liabilities, with each jointly held item counted once. Show valuation dates and distinguish unavailable/illiquid wealth from spendable reserves.
 6. **Coverage of upcoming obligations** (optional MVP if user enters them): reserves versus required short-term payments.
 7. For zero denominators or missing values show 'Not available' with a reason, not NaN or misleading zero.
 
 ## Risk-status model — explainability first
+All determinations apply to the **household**, not to an individual adult or child. A household with strong combined earnings may still be At Risk if shared obligations cannot be met, liquid reserves are inaccessible, or liabilities are concentrated. Different family compositions affect essential costs; avoid assuming each dependent implies a fixed spending amount.
 **Statuses:** Healthy / Caution / At Risk / Insufficient Data.
 
 - **Healthy:** required bills appear coverable, available liquid buffer and debt burden fall within **owner-reviewed, documented thresholds**, and no critical indicators are triggered. Never declare 'risk-free'.
@@ -53,7 +57,16 @@ A person wants to understand whether their **overall personal or household finan
 - Explain uncertainties and assumptions; avoid guarantees, investment/credit eligibility judgments, or personalized regulated advice.
 - Reflect conflicting dimensions: high property wealth cannot erase a near-term cash shortage.
 
-## Acceptance criteria (draft)
+## Household-specific acceptance criteria (draft)
+- [ ] Given two adults contribute income and share expenses, when the household snapshot is assessed, then combined income and actual household expenses produce **one household result**; no per-person score is displayed.
+- [ ] Given a transfer of funds between two household accounts, when totals are calculated, then the transfer does not inflate combined household income, spending, reserves or net worth.
+- [ ] Given a jointly held property or shared loan appearing in multiple input records, when consolidated, then the asset and obligation count **once**; duplicate/ambiguous records trigger review.
+- [ ] Given reserves owned by one adult but inaccessible for family expenses, when emergency coverage is computed, then inaccessible balances are excluded even if they contribute to overall household wealth.
+- [ ] Given essential caregiving/education costs for dependents, when the family enters monthly expenses, then those costs are included in household obligations without requiring children's identifying details.
+- [ ] Given member-level income or debt information is incomplete, when the system cannot establish trustworthy household totals, then it shows Insufficient Data or a clearly limited result rather than Healthy.
+- [ ] Given a separate household account, when its user requests this family's financial data, then access is denied; household member sharing is not enabled without explicit permissions and consent.
+
+## General acceptance criteria (draft)
 - [ ] Given complete valid financial inputs, when assessment runs, then every displayed metric equals a documented deterministic formula with relevant precision and currency.
 - [ ] Given positive income but material debt pressure and very low liquid savings under the approved policy, when assessment runs, then a positive cash flow alone **cannot** force Healthy.
 - [ ] Given a high-value illiquid asset and minimal accessible reserves, when assessment runs, then emergency coverage uses **only liquid reserves**, not net worth.
@@ -80,11 +93,11 @@ A person wants to understand whether their **overall personal or household finan
 - Research rationale: https://www.consumerfinance.gov/consumer-tools/financial-well-being/about/ and https://www.consumerfinance.gov/data-research/research-reports/perceived-financial-preparedness-saving-habits-and-financial-security/
 
 ## Owner decisions needed before Codex implementation
-1. Individual or household financial health (or both)?
+1. **Resolved by product owner on 2026-10-31: household/family financial health only.** Do not implement an individual assessment mode in MVP.
 2. Primary currency (VND expected as candidate), multi-currency/asset valuation rules?
 3. Security model and whether first iteration stores genuine sensitive financial information or only synthetic/demo profiles?
 4. Accept status categories Healthy / Caution / At Risk / Insufficient Data?
 5. Select and review threshold policy / risk priority rules, with separate caution for data gaps.
 6. Confirm whether direct income/expense totals suffice for MVP or full manual transaction entry is required.
 
-**Approval gate:** This specification is Draft. No engineering implementation, production data ingestion or deployment is authorized.
+**Approval gate:** Assessment unit is confirmed, but this specification is otherwise Draft. No engineering implementation, production data ingestion or deployment is authorized.
