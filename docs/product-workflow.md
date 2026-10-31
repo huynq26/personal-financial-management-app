@@ -43,4 +43,6 @@ User idea in ChatGPT
 - [ ] Dependencies, budget constraints and open risks are visible.
 - [ ] GitHub issue/PR contains an approval record.
 
+Central intake: [Software Factory pilot discovery issue #4](https://github.com/huynq26/software-factory/issues/4).
+
 Current pilot scope is **Draft**. The static dashboard is synthetic demonstration data and is not an approved product implementation.
