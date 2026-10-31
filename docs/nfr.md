@@ -2,6 +2,12 @@
 
 **Status:** Draft, not approved for implementation. **Household assessment, VND and private real-data intake/persistence are confirmed product directions (2026-10-31).** Preview/tests remain synthetic-data-only; the actual product must not accept real data until security controls and QC are approved.
 
+## Vietnam storage residency (confirmed owner requirement, 2026-10-31)
+- All real household finance data at rest — primary database, replicas, backups, archives, copies, private log records and exports — **must be physically stored within Vietnam**. Provider contract and QC evidence must confirm primary, disaster-recovery and backup locations; vendor nationality is insufficient.
+- Prefer Vietnam-based compute for **all private Next.js pages/APIs and Better Auth identity/session handling**, to avoid processing household figures and authentication events abroad. See [ADR-0002](adr/0002-vietnam-data-residency.md). Supabase Singapore and Vercel private production SSR/API are not approved.
+- Logs may be stored abroad only if independently proven to contain **no** private financial/identity information and legally reviewed. Avoid sending figures to third-party analytics, email/OTP, CDN, error reporting, provider support or AI systems by default.
+- Vercel and GitHub remain **synthetic-only** environments. Review Law 91/2025/QH15 and Decree 356/2025/ND-CP applicability before launch; hosting in VN is not a compliance guarantee.
+
 ## Security and privacy
 - Treat consolidated family income, expenses, debt, savings, net worth, ownership/access flags and information about dependents as sensitive household data. Do not require children's names or identifying details for an assessment.
 - The actual application **must securely persist authenticated user-entered household financial information**. Before any real data is accepted, enforce server-side authentication and ownership checks for **every** create/read/update/delete. Vercel Preview, fixtures and GitHub issues/logs use **synthetic data only**.
