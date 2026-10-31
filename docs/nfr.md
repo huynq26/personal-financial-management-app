@@ -1,12 +1,12 @@
 # Non-functional requirements — Financial Health App (draft)
 
-**Status:** Draft, not approved for implementation. **Household assessment unit and VND primary currency confirmed as scope choices on 2026-10-31.** Initial implementation is synthetic-data-only until the privacy/security model and risk thresholds are accepted.
+**Status:** Draft, not approved for implementation. **Household assessment, VND and private real-data intake/persistence are confirmed product directions (2026-10-31).** Preview/tests remain synthetic-data-only; the actual product must not accept real data until security controls and QC are approved.
 
 ## Security and privacy
 - Treat consolidated family income, expenses, debt, savings, net worth, ownership/access flags and information about dependents as sensitive household data. Do not require children's names or identifying details for an assessment.
-- Do not store real user data in Vercel Preview or in repository issues/logs. Authenticate and authorize every read/write before adding persistence.
+- The actual application **must securely persist authenticated user-entered household financial information**. Before any real data is accepted, enforce server-side authentication and ownership checks for **every** create/read/update/delete. Vercel Preview, fixtures and GitHub issues/logs use **synthetic data only**.
 - Treat one household as a separate authorization boundary. Deny cross-household access; initially permit only the authorized managing account, with any future invited-adult sharing subject to explicit permissions and consent. Test unauthorized, unauthenticated, and cross-household access.
-- Choose data residency, encryption, retention and deletion policies before accepting real data; do not expose secrets to CI or agent tasks.
+- Select and document database region, encryption in transit/at rest, least-privileged server credentials, retention, export and deletion/backup handling **before enabling production data capture**; do not expose secrets to CI or agents. No raw household figures in analytics, logs or AI prompts by default.
 
 ## Correctness, explainability and auditability
 - Every status must be derived from versioned, owner-reviewed financial rules with unit-tested boundaries and a source-input trace.
@@ -15,6 +15,13 @@
 - Show input freshness, confidence and reason codes; incomplete/contradictory data cannot silently yield a reassuring status.
 - No unsupported numeric credit or financial-health scores, absolute guarantees, or regulated investment/borrowing recommendations.
 - Maintain a test fixture matrix covering healthy, caution, risk, insufficient-data, contradictory and zero-denominator cases, plus households with multiple income sources, dependents, restricted savings and jointly held assets/debts.
+
+## Secure persistence and identity acceptance
+- One authenticated adult account manages one household in MVP. No spouse invitations or household sharing by default; avoid collecting child identifiers.
+- Persist each snapshot in a private database. Validate VND amounts on the server, guard against mass assignment/ID tampering, enforce per-account household isolation, and avoid exposing financial amounts through API errors.
+- On update, calculations must derive from the stored latest snapshot and an approved versioned risk policy. A write failure must not show success or create duplicate snapshots.
+- Make viewing, editing, requesting deletion, and retention terms clear. Backup erasure/recovery constraints must be disclosed accurately.
+- Security/QC verify cross-household access denial, safe session handling, HTTPS, misuse protection, and no PII/financial amounts in Vercel logs, preview or telemetry.
 
 ## Accessibility and usability
 - Semantic HTML, screen reader labels, keyboard operation, explicit text alongside any risk colors, helpful validation errors.
