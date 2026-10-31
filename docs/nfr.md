@@ -1,6 +1,6 @@
 # Non-functional requirements — Financial Health App (draft)
 
-**Status:** Draft, not approved for implementation. **Household assessment unit approved as a scope choice on 2026-10-31.** Initial implementation is synthetic-data-only until the privacy/security model and risk thresholds are accepted.
+**Status:** Draft, not approved for implementation. **Household assessment unit and VND primary currency confirmed as scope choices on 2026-10-31.** Initial implementation is synthetic-data-only until the privacy/security model and risk thresholds are accepted.
 
 ## Security and privacy
 - Treat consolidated family income, expenses, debt, savings, net worth, ownership/access flags and information about dependents as sensitive household data. Do not require children's names or identifying details for an assessment.
@@ -10,7 +10,7 @@
 
 ## Correctness, explainability and auditability
 - Every status must be derived from versioned, owner-reviewed financial rules with unit-tested boundaries and a source-input trace.
-- Use monetary integer minor units or validated decimal arithmetic according to the currency; do not silently round or compare binary-floating-point money.
+- Initial MVP monetary reporting/entry is **VND**. Use exact whole-đồng values (safe integers or validated decimal representation within explicitly supported bounds); do not silently round, overflow or calculate currency amounts using imprecise binary-floating-point money. Reject unsupported mixed-currency aggregation. Native multi-currency and automatic FX are deferred.
 - Use combined net household income, essential/discretionary family expenses and total obligations affecting the family. Avoid counting transfers between household members, jointly held assets, shared debts or debt repayments twice. Exclude illiquid and inaccessible individually held assets from available emergency reserves.
 - Show input freshness, confidence and reason codes; incomplete/contradictory data cannot silently yield a reassuring status.
 - No unsupported numeric credit or financial-health scores, absolute guarantees, or regulated investment/borrowing recommendations.
@@ -28,6 +28,11 @@
 ## Monitoring and costs
 - Capture operational errors without revealing financial amounts or PII; define alerting and cost budgets before production.
 - Vercel preview builds and smoke tests use synthetic fixtures only.
+
+## VND correctness and QA
+- Test VND input parsing and formatting (Vietnamese separators, whole đồng, zero, invalid fractional or negative figures as applicable) without confusing thousands separators or changing magnitude.
+- Ensure source currency/valuation dates are traceable when external asset valuations are manually provided in VND; never invent an FX rate.
+- Verify threshold rules compare homogeneous VND amounts, with no implicit cross-currency addition.
 
 ## Household modeling and data minimization
 - The household is the unit of financial assessment. Do not produce separate adult/child health scores in the MVP.
