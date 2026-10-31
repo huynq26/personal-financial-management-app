@@ -24,7 +24,7 @@ Open http://localhost:3000.
 
 ## How the factory uses this repo
 
-1. Product Agent: turn ideas into a reviewable PRD, MVP and testable feature specs using [the local skill](.agents/skills/product-agent/SKILL.md), [idea intake](.github/ISSUE_TEMPLATE/product_idea.yml) and [product workflow](docs/product-workflow.md). **You approve the scope**; the agent does not.
+1. **Central factory Product Agent:** work begins with an idea in [software-factory](https://github.com/huynq26/software-factory). Its [single Product Agent skill](https://github.com/huynq26/software-factory/blob/main/.agents/skills/product-agent/SKILL.md) drafts this product's PRD, MVP, NFRs and feature specs, following [the product handoff contract](docs/product-workflow.md). **The owner approves scope.** No local copy of the Product Agent is required.
 2. Platform Agent: own architecture, platform configuration and build/test infrastructure.
 3. Codex Engineer: implement an approved GitHub issue in an isolated branch and PR.
 4. QC Agent: verify behavior, accessibility and NFRs against a Vercel Preview and record evidence.
