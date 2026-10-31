@@ -1,6 +1,6 @@
 # Financial Health App — MVP product brief
 
-**Status: Draft specifications; HOUSEHOLD ASSESSMENT UNIT CONFIRMED by product owner (2026-10-31); remaining MVP decisions and implementation NOT approved.**  
+**Status: Draft specifications; HOUSEHOLD assessment and VND primary currency CONFIRMED by product owner (2026-10-31); remaining MVP decisions and implementation NOT approved.**  
 **Product Agent:** Central [Software Factory Product Agent](https://github.com/huynq26/software-factory/blob/main/.agents/skills/product-agent/SKILL.md).  
 **Factory intake and approval:** [Issue #4](https://github.com/huynq26/software-factory/issues/4).  
 **Specifications:** [Financial health assessment](../specs/financial-health-assessment.md) (primary) and [cash-flow tracking](../specs/manual-cashflow-tracking.md) (supporting).
@@ -25,7 +25,7 @@ This audience definition is a product hypothesis, not evidence of product-market
 ## MVP scope (revised proposal)
 
 **P0 — Financial snapshot & financial health assessment**
-- Manually enter **combined household** monthly income, essential/discretionary family expenses, required payments on debts affecting the household, accessible family savings, assets and liabilities; specify currency and as-of date. Mark ownership/availability where it affects emergency liquidity.
+- Manually enter **combined household** monthly income, essential/discretionary family expenses, required payments on debts affecting the household, accessible family savings, assets and liabilities **in Vietnamese đồng (VND)** with an as-of date. Mark ownership/availability where it affects emergency liquidity. Multi-currency amounts and automated FX conversion are deferred beyond MVP.
 - Calculate **household** monthly surplus, liquid emergency-fund coverage, debt burden and household net worth with auditable definitions. Avoid double-counting shared items, internal household transfers and loan repayments.
 - Display an explainable qualitative assessment: Healthy / Caution / At Risk / Insufficient Data, with categorized contributing signals and measurement gaps.
 - Provide specific, general action suggestions (e.g. review spending, improve emergency liquidity) rather than unvalidated predictions or individualized investment advice.
@@ -43,7 +43,7 @@ Bank connections, credit scoring, trading, regulated investment recommendations,
 
 ## Functional acceptance (draft)
 - [ ] Given a family financial snapshot, all reported income, spending, debts and available reserves are assessed **at household level**, with amounts traced to their sources and no duplicated shared assets or inter-member transfers.
-- [ ] With valid complete inputs, metrics follow documented formulas, currencies and precision.
+- [ ] With valid complete inputs, metrics use documented formulas and correctly display amounts in VND, with integer-đồng precision and no silent rounding or currency conversion.
 - [ ] Positive monthly cash flow cannot by itself imply Healthy when liquid reserves or debt obligations are risky.
 - [ ] Family home/property and restricted assets may count toward net worth (with liability offsets), but **not** accessible emergency reserves.
 - [ ] Missing or inconsistent key information triggers Insufficient Data or a visibly qualified assessment.
@@ -59,7 +59,7 @@ User can enter a snapshot, understand an assessment and accurately identify key 
 
 ## Open questions for owner
 - **Resolved: household/family financial health only for MVP (2026-10-31).**
-- VND only or multiple currencies?
+- **Resolved: VND is the primary reporting and entry currency for the first MVP (2026-10-31).** A native multi-currency portfolio and exchange-rate conversion remain outside this MVP; values denominated in other currencies must not be silently aggregated as VND.
 - Demo-only versus securely persisted real personal data?
 - Are the proposed status labels acceptable?
 - What threshold policy / risk severity rules should be reviewed for local context?
@@ -68,4 +68,4 @@ User can enter a snapshot, understand an assessment and accurately identify key 
 CFPB describes financial well-being as control of finances, ability to absorb a shock, progress toward goals and freedom of choice: https://www.consumerfinance.gov/consumer-tools/financial-well-being/about/. Do not equate a newly invented status classification with the validated CFPB self-report scale or represent it as a certified financial diagnosis.
 
 ## Approval
-Household assessment unit confirmed; other scope choices and implementation approval pending. The existing Next.js pilot UI is a **fictional technical scaffold**, not an implemented financial health assessment or production-ready financial product.
+Household assessment unit and VND primary currency confirmed; other scope choices and implementation approval pending. The existing Next.js pilot UI is a **fictional technical scaffold**, not an implemented financial health assessment or production-ready financial product.
