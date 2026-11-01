@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Finance Lab | Software Factory Pilot",
-  description: "A preview-only starter for a personal financial management product.",
+  title: "Family Finance | Private Household Vault",
+  description: "Local-first household finance pilot. Development build: use fictional test figures only.",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
