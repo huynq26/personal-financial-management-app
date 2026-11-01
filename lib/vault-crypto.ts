@@ -22,11 +22,14 @@ function toBase64(bytes: Uint8Array): string {
   }
   return btoa(s);
 }
-function fromBase64(value: string): Uint8Array {
+function fromBase64(value: string): Uint8Array<ArrayBuffer> {
   if (!/^[A-Za-z0-9+/]+={0,2}$/.test(value) || value.length % 4 !== 0) {
     throw new Error("Invalid encrypted backup encoding.");
   }
-  return Uint8Array.from(atob(value), char => char.charCodeAt(0));
+  const data = atob(value);
+  const bytes = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) bytes[i] = data.charCodeAt(i);
+  return bytes;
 }
 
 export function validateEnvelope(value: unknown): asserts value is VaultEnvelope {
@@ -46,7 +49,7 @@ export function validateEnvelope(value: unknown): asserts value is VaultEnvelope
   }
 }
 
-async function deriveVaultKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveVaultKey(passphrase: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const material = await crypto.subtle.importKey("raw", encoder.encode(passphrase),
     "PBKDF2", false, ["deriveKey"]);
   return crypto.subtle.deriveKey(
