@@ -1,6 +1,6 @@
 # ADR-0003 — Free Vercel MVP with encrypted local-first household storage
 
-- **Status:** Proposed for owner review — 2026-10-31
+- **Status:** **Owner accepted local-first single-device architecture on 2026-11-01; implementation and real-data release remain pending security/QC.**
 - **Owner's latest direction:** Use Vercel for the MVP, with **simple authentication and database** and keep household financial data stored in Vietnam.
 - **Applies to:** one adult, one household, VND financial snapshot and health indicators.
 - **Previous plan:** [ADR-0002](0002-vietnam-data-residency.md) remains the preferred design **if cloud storage, multi-device sync or real server authentication becomes necessary**. No overseas private data processing is approved.
@@ -76,10 +76,10 @@ Browser on user's device in Vietnam
 
 ## Owner decision required
 
-- [ ] Confirm that for MVP, **a local encrypted vault on one device/browser is acceptable with no automatic cross-device sync**.
-- [ ] Agree that **local passphrase unlock is not online authentication**.
-- [ ] Accept manual encrypted backup/restore requirement and no provider password recovery.
-- [ ] Approve Vercel static origin for actual local-only use after independent QC.
+- [x] **Confirmed by owner (2026-11-01):** local encrypted vault on one browser/device is acceptable; no automatic cross-device sync for MVP.
+- [x] **Acknowledged as the design:** passphrase unlock is local protection and **not** online authentication; no remote account recovery.
+- [x] Encrypted manual backup/restore is included in the accepted local-first design; there is **no provider recovery**. **Actual encrypted backup and restoration have NOT been implemented or tested.**
+- [ ] Approve a reviewed, stable Vercel static release for **real financial-data entry only after independent crypto, backup/restore, privacy and security QC PASS**.
 
 ## References
 - https://vercel.com/docs/plans/hobby
