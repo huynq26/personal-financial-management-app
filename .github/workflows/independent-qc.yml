@@ -1,0 +1,38 @@
+name: Independent product QC
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-qc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout candidate without writable credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install locked QC dependency versions
+        run: npm install --no-audit --no-fund
+      - name: Install headless browser
+        run: npx playwright install --with-deps chromium
+      - name: Build static production artifact
+        run: npm run build
+      - name: Run independent browser E2E tests
+        run: npx playwright test tests/browser-qc.spec.ts
+      - name: Run independent security tests
+        run: npx tsx --test tests/qc-security.test.ts
+      - name: Run independent performance tests
+        run: npx playwright test tests/performance-qc.spec.ts
+
+# CI and QC are separate Actions workflows. Execution is read-only and uses
+# fictional data. A successful run is not a protected Preview assertion,
+# an approved-spec binding, or authorization to release real household data.
