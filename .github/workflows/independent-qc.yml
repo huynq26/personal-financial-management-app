@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   independent-qc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout candidate without writable credentials
@@ -29,7 +29,7 @@ jobs:
       - name: Run independent browser E2E tests
         run: npx playwright test tests/browser-qc.spec.ts
       - name: Run independent security tests
-        run: npx tsx --test tests/qc-security.test.ts
+        run: npx tsx --test tests/qc-security.qc.ts
       - name: Run independent performance tests
         run: npx playwright test tests/performance-qc.spec.ts
 
