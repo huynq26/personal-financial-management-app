@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Install locked QC dependency versions
+      - name: Install project dependencies and pinned browser test runner
         run: npm install --no-audit --no-fund
       - name: Install headless browser
         run: npx playwright install --with-deps chromium
