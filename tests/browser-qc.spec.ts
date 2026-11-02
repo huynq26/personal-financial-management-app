@@ -63,6 +63,6 @@ test("real browser: wrong passphrase cannot unlock saved financial data", async 
   await page.getByRole("button", { name: "Lock vault" }).click();
   await page.locator("#vault-passphrase").fill("wrong but long enough passphrase");
   await page.getByRole("button", { name: "Unlock vault" }).click();
-  await expect(page.getByRole("alert")).toContainText(/incorrect passphrase|damaged encrypted data/i);
+  await expect(page.locator("p.error[role=\"alert\"]")).toContainText(/incorrect passphrase|damaged encrypted data/i);
   await expect(page.getByRole("heading", { name: "Financial overview" })).toHaveCount(0);
 });
