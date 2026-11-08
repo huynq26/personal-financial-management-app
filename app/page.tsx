@@ -93,7 +93,7 @@ export default function Home() {
       const result = await createVault(passphrase);
       const existing = await readVault();
       if (existing) throw new Error("An existing vault was found. Unlock or restore it instead.");
-      await writeVault(result.envelope);
+      await writeVault(result.envelope, null);
       enterReady(result.document, result.key, result.envelope);
       setPersistentStorage(await requestPersistentStorage());
     } catch (err) { setError(friendlyError(err)); }
@@ -115,6 +115,7 @@ export default function Home() {
   }
 
   function updateField(field: MoneyField, value: string) {
+    if (busy) return;
     if (!isValidVnd(value)) {
       setError("Enter whole VND using digits only, without commas, periods or negative values.");
       return;
@@ -126,6 +127,7 @@ export default function Home() {
   }
 
   function chooseMonth(month: string) {
+    if (busy) return;
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return;
     if (dirty && !window.confirm("Discard unsaved changes and switch months?")) return;
     setForm(document?.snapshots[month] ?? blankSnapshot(month));
@@ -135,16 +137,17 @@ export default function Home() {
   }
 
   async function saveCurrent() {
-    if (!document || !keyRef.current || !envelopeRef.current) return;
+    if (busy || !document || !keyRef.current || !envelopeRef.current) return;
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       const updated: HouseholdSnapshot = { ...form, updatedAt: new Date().toISOString() };
       const next: VaultDocument = {
         version: 1, snapshots: { ...document.snapshots, [form.month]: updated },
       };
       const envelope = await encryptDocument(next, keyRef.current, envelopeRef.current.salt);
-      await writeVault(envelope);
+      await writeVault(envelope, envelopeRef.current);
       envelopeRef.current = envelope;
       setDocument(next);
       setForm(updated);
@@ -155,7 +158,7 @@ export default function Home() {
   }
 
   async function deleteMonth() {
-    if (!document || !keyRef.current || !envelopeRef.current ||
+    if (busy || !document || !keyRef.current || !envelopeRef.current ||
       !document.snapshots[form.month] ||
       !window.confirm("Permanently remove this month's saved snapshot from this browser?")) return;
     setBusy(true);
@@ -164,7 +167,7 @@ export default function Home() {
       delete snapshots[form.month];
       const next: VaultDocument = { version: 1, snapshots };
       const envelope = await encryptDocument(next, keyRef.current, envelopeRef.current.salt);
-      await writeVault(envelope);
+      await writeVault(envelope, envelopeRef.current);
       envelopeRef.current = envelope;
       setDocument(next);
       setForm(blankSnapshot(form.month));
@@ -175,6 +178,7 @@ export default function Home() {
   }
 
   function lockVault() {
+    if (busy) return;
     if (dirty && !window.confirm("Lock and discard unsaved edits?")) return;
     keyRef.current = null;
     setDocument(null);
@@ -192,7 +196,8 @@ export default function Home() {
     setBusy(true);
     setError("");
     try {
-      await deleteVault();
+      if (!envelopeRef.current) throw new Error("The active vault revision is unavailable.");
+      await deleteVault(envelopeRef.current);
       envelopeRef.current = null;
       keyRef.current = null;
       setDocument(null);
@@ -244,8 +249,14 @@ export default function Home() {
       if (existing && !window.confirm("Replace the encrypted vault currently stored in this browser with this backup?")) {
         return;
       }
-      await writeVault(envelope);
-      enterReady(unlocked.document, unlocked.key, envelope);
+      // Never persist the backup's original IV/ciphertext verbatim. A restore
+      // of an older envelope could otherwise recreate an identical revision
+      // (ABA), allowing a stale tab to silently overwrite this restored vault.
+      const restored = await encryptDocument(
+        unlocked.document, unlocked.key, envelope.salt,
+      );
+      await writeVault(restored, existing);
+      enterReady(unlocked.document, unlocked.key, restored);
       setNotice("Encrypted backup restored locally.");
     } catch (err) { setError(friendlyError(err)); }
     finally { setBusy(false); }
@@ -257,7 +268,7 @@ export default function Home() {
         <div className="brand"><span className="mark" aria-hidden="true">F</span><span>Family Finance</span></div>
         <div className="top-actions">
           <span className="preview-label">LOCAL-FIRST MVP</span>
-          {stage === "ready" && <button className="button text-button" onClick={lockVault}>Lock vault</button>}
+          {stage === "ready" && <button className="button text-button" onClick={lockVault} disabled={busy}>Lock vault</button>}
         </div>
       </header>
 
@@ -323,8 +334,13 @@ export default function Home() {
               </div>
               <div className="month-row">
                 <div className="field"><label htmlFor="month">Reporting month</label>
-                  <input id="month" type="month" value={form.month} onChange={e => chooseMonth(e.target.value)} /></div>
-                <button className="button outline small" type="button" onClick={() => {
+                  <input id="month" type="month" value={form.month} disabled={busy} onChange={e => chooseMonth(e.target.value)} /></div>
+                <button className="button outline small" type="button" disabled={busy} onClick={() => {
+                  if (busy) return;
+                  const populated = moneyFields.some(({ key }) => form[key] !== "") || form.overdue !== "unknown";
+                  if ((dirty || populated) && !window.confirm(
+                    "Replace these entries with fictional sample values? Unsaved changes will be discarded."
+                  )) return;
                   setForm({ ...blankSnapshot(form.month), ...sampleAmounts, updatedAt: "" });
                   setDirty(true);
                   setNotice("Fictional sample values loaded; they have not been saved.");
@@ -336,7 +352,7 @@ export default function Home() {
                     <label htmlFor={field.key}>{field.label}</label>
                     <div className="money-input"><input
                       id={field.key} type="text" inputMode="numeric" autoComplete="off"
-                      value={form[field.key]} onChange={e => updateField(field.key, e.target.value.trim())}
+                      value={form[field.key]} disabled={busy} onChange={e => updateField(field.key, e.target.value.trim())}
                       placeholder="Leave blank if unknown" aria-describedby={field.key + "-hint"} />
                       <span>VND</span></div>
                     <small id={field.key + "-hint"}>{field.hint}</small>
@@ -345,7 +361,7 @@ export default function Home() {
               </div>
               <div className="field">
                 <label htmlFor="overdue">Any overdue household bills or loan repayments?</label>
-                <select id="overdue" value={form.overdue} onChange={e => { setForm(p => ({ ...p, overdue: e.target.value as HouseholdSnapshot["overdue"] })); setDirty(true); }}>
+                <select id="overdue" value={form.overdue} disabled={busy} onChange={e => { if (busy) return; setForm(p => ({ ...p, overdue: e.target.value as HouseholdSnapshot["overdue"] })); setDirty(true); }}>
                   <option value="unknown">Unknown / not provided</option>
                   <option value="no">No</option>
                   <option value="yes">Yes</option>
@@ -386,7 +402,7 @@ export default function Home() {
                 <p className="overline">03 · BACKUP & PRIVACY</p>
                 <h2 id="backup-title">Keep a recovery copy</h2>
                 <p>Browser storage can disappear if your device is reset, the browser is cleared, or its storage is evicted. You cannot recover a lost passphrase.</p>
-                <button className="button outline" onClick={() => void downloadBackup()}>Export encrypted backup</button>
+                <button className="button outline" disabled={busy} onClick={() => void downloadBackup()}>Export encrypted backup</button>
                 <p className="hint">Store your encrypted backup on a trusted device or drive in Vietnam. Lock this vault to restore a backup file.</p>
                 {persistentStorage === false && <p className="hint">Your browser did not grant persistent storage. Backups are especially important.</p>}
                 <div className="divider" />
