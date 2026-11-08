@@ -93,7 +93,7 @@ test("browser: stale second tab cannot silently overwrite a newer encrypted mont
   await other.locator("#income").fill("300");
   await other.getByRole("button", { name: "Encrypt & save on device" }).click();
   await expect(other.locator('p.error[role="alert"]')).toContainText("Another tab changed this encrypted vault");
-  await expect(other.getByText("Unsaved edits")).toBeVisible();
+  await expect(other.locator(".dirty-pill").getByText("Unsaved edits", { exact: true })).toBeVisible();
   await expect(other.locator("#income")).toHaveValue("300");
 
   // After deliberately discarding the unsaved stale tab, the committed latest
