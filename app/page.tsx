@@ -249,8 +249,14 @@ export default function Home() {
       if (existing && !window.confirm("Replace the encrypted vault currently stored in this browser with this backup?")) {
         return;
       }
-      await writeVault(envelope, existing);
-      enterReady(unlocked.document, unlocked.key, envelope);
+      // Never persist the backup's original IV/ciphertext verbatim. A restore
+      // of an older envelope could otherwise recreate an identical revision
+      // (ABA), allowing a stale tab to silently overwrite this restored vault.
+      const restored = await encryptDocument(
+        unlocked.document, unlocked.key, envelope.salt,
+      );
+      await writeVault(restored, existing);
+      enterReady(unlocked.document, unlocked.key, restored);
       setNotice("Encrypted backup restored locally.");
     } catch (err) { setError(friendlyError(err)); }
     finally { setBusy(false); }
