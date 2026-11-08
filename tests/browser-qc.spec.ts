@@ -104,6 +104,73 @@ test("browser: stale second tab cannot silently overwrite a newer encrypted mont
   await expect(other.locator("#income")).toHaveValue("200");
 });
 
+test("browser: restoring an older backup cannot recreate a stale tab revision (ABA)", async ({ page, context }) => {
+  await page.goto("/");
+  await page.locator("#vault-passphrase").fill(PASSPHRASE);
+  await page.locator("#confirm-passphrase").fill(PASSPHRASE);
+  await page.getByRole("button", { name: "Create encrypted vault" }).click();
+  await expect(page.locator("#income")).toBeVisible();
+  await page.locator("#income").fill("100");
+  await page.getByRole("button", { name: "Encrypt & save on device" }).click();
+  await expect(page.getByText("Encrypted snapshot saved on this device.", { exact: false })).toBeVisible();
+
+  // Capture a synthetic encrypted backup at revision E2. Another tab keeps
+  // E2 unlocked while the first tab saves E3 and then restores the E2 backup.
+  const backup = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open("household-financial-vault", 1);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    try {
+      return await new Promise<unknown>((resolve, reject) => {
+        const req = db.transaction("encrypted-records", "readonly")
+          .objectStore("encrypted-records").get("household");
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    } finally {
+      db.close();
+    }
+  });
+  expect(backup).toBeTruthy();
+
+  const stale = await context.newPage();
+  await stale.goto("/");
+  await stale.locator("#vault-passphrase").fill(PASSPHRASE);
+  await stale.getByRole("button", { name: "Unlock vault" }).click();
+  await expect(stale.locator("#income")).toHaveValue("100");
+
+  await page.locator("#income").fill("200");
+  await page.getByRole("button", { name: "Encrypt & save on device" }).click();
+  await expect(page.getByText("Encrypted snapshot saved on this device.", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Lock vault" }).click();
+  await page.locator("#vault-passphrase").fill(PASSPHRASE);
+  page.once("dialog", dialog => void dialog.accept());
+  await page.locator("#backup-file").setInputFiles({
+    name: "synthetic-vault-backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(backup)),
+  });
+  await expect(page.getByText("Encrypted backup restored locally.")).toBeVisible();
+  await expect(page.locator("#income")).toHaveValue("100");
+
+  // Without fresh encryption, the restored bytes match stale tab E2 exactly,
+  // its read-compare-write succeeds, and restored data is silently lost.
+  await stale.locator("#income").fill("300");
+  await stale.getByRole("button", { name: "Encrypt & save on device" }).click();
+  await expect(stale.locator('p.error[role="alert"]')).toContainText(
+    "Another tab changed this encrypted vault"
+  );
+  await expect(stale.locator("#income")).toHaveValue("300");
+  await expect(stale.locator(".dirty-pill")).toContainText("Unsaved edits");
+
+  await page.reload();
+  await page.locator("#vault-passphrase").fill(PASSPHRASE);
+  await page.getByRole("button", { name: "Unlock vault" }).click();
+  await expect(page.locator("#income")).toHaveValue("100");
+});
+
 test("browser: editing and month switching are disabled during a pending save", async ({ page }) => {
   await page.goto("/");
   await page.locator("#vault-passphrase").fill(PASSPHRASE);
